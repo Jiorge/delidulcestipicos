@@ -391,7 +391,7 @@ function CartDrawer({ cartApi, onClose }) {
               ))}
             </ul>
 
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre (opcional)"
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre"
               className="mt-4 w-full rounded-2xl border-2 border-stone-200 px-4 py-3 font-dulce outline-none focus:border-[#BC0A7B]" />
             <div className="mt-3 flex gap-2" role="group" aria-label="Tipo de entrega">
               {["Recoger en tienda", "Envío a domicilio"].map((d) => (
