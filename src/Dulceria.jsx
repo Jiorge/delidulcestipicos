@@ -234,12 +234,18 @@ function Hero() {
     <section id="inicio" className="relative overflow-hidden px-4 pb-10 pt-8 sm:pt-14">
       <div className="bg-magS absolute -left-16 top-10 h-52 w-52 rounded-full blur-3xl" />
       <div className="bg-cyaS absolute -right-10 bottom-0 h-60 w-60 rounded-full blur-3xl" />
-      <div className="relative mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-8 md:grid-cols-2">
-        <div className="entrada min-w-0 text-center md:text-left">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-x-8 gap-y-6 md:grid-cols-2 md:gap-y-0">
+        {/* Móvil: titular → cinta → foto → texto y botones. Escritorio: texto a la izquierda, foto a la derecha */}
+        <div className="entrada min-w-0 text-center md:col-start-1 md:row-start-1 md:self-end md:text-left">
           <p className="bg-golS tx-ink mb-3 inline-block rounded-full px-4 py-1 font-dulce text-sm font-medium">Hechas a mano, como siempre</p>
           <h1 className="tx-ink font-dulce text-4xl font-bold leading-tight sm:text-6xl">El crujido de la tradición, en cada bocado.</h1>
           <Ticker />
-          <p className="mx-auto mt-4 max-w-md font-dulce text-lg text-stone-600 md:mx-0">
+        </div>
+        <div className="md:col-start-2 md:row-span-2 md:row-start-1">
+          <HeroPhoto />
+        </div>
+        <div className="entrada min-w-0 text-center md:col-start-1 md:row-start-2 md:self-start md:text-left">
+          <p className="mx-auto max-w-md font-dulce text-lg text-stone-600 md:mx-0 md:mt-4">
             Somos productores de palanquetas y alegrías de amaranto. Miel, semillas y recetas de familia. Además, una selección de los mejores dulces típicos de México.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center md:justify-start">
@@ -247,7 +253,6 @@ function Hero() {
             <a href={wa("Hola, quiero cotizar un pedido para evento o mayoreo")} className="pop bg-cya tx-ink rounded-full px-7 py-4 text-center font-dulce text-lg font-semibold">Cotizar para mi evento</a>
           </div>
         </div>
-        <HeroPhoto />
       </div>
     </section>
   );
@@ -373,7 +378,7 @@ function CartDrawer({ cartApi, open, onClose }) {
   const [mapLink, setMapLink] = useState("");
   const [geoMsg, setGeoMsg] = useState("");
   const isShip = delivery === "Envío a domicilio";
-  const missingAddress = isShip && !address.trim() && !mapLink;
+  const missing = [!name.trim() && "tu nombre", isShip && !address.trim() && !mapLink && "tu dirección o ubicación"].filter(Boolean);
   const link = wa(orderMessage(items, total, name.trim(), delivery, isShip ? address.trim() : "", isShip ? mapLink : ""));
   const locate = () => {
     if (!navigator.geolocation) return setGeoMsg("Tu navegador no permite compartir ubicación. Escribe tu dirección.");
@@ -420,8 +425,10 @@ function CartDrawer({ cartApi, open, onClose }) {
               ))}
             </ul>
 
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre (opcional)"
-              className="mt-4 w-full rounded-2xl border-2 border-stone-200 px-4 py-3 font-dulce outline-none focus:border-[#BC0A7B]" />
+            <label htmlFor="nombre" className="mt-4 block font-dulce text-sm font-medium text-stone-700">Tu nombre <span className="tx-mag">*</span></label>
+            <input id="nombre" value={name} onChange={(e) => setName(e.target.value)} placeholder="¿A nombre de quién va el pedido?"
+              autoComplete="name" required aria-required="true"
+              className="mt-1 w-full rounded-2xl border-2 border-stone-200 px-4 py-3 font-dulce outline-none focus:border-[#BC0A7B]" />
             <div className="mt-3 flex gap-2" role="group" aria-label="Tipo de entrega">
               {["Recoger en tienda", "Envío a domicilio"].map((d) => (
                 <button key={d} onClick={() => setDelivery(d)} aria-pressed={delivery === d}
@@ -430,7 +437,7 @@ function CartDrawer({ cartApi, open, onClose }) {
             </div>
             {isShip && (
               <div className="mt-3">
-                <label htmlFor="direccion" className="font-dulce text-sm font-medium text-stone-700">Dirección de entrega</label>
+                <label htmlFor="direccion" className="font-dulce text-sm font-medium text-stone-700">Dirección de entrega <span className="tx-mag">*</span></label>
                 <textarea id="direccion" rows={3} value={address} onChange={(e) => setAddress(e.target.value)}
                   placeholder="Calle, número, colonia, municipio, estado, C.P. y referencias"
                   className="mt-1 w-full rounded-2xl border-2 border-stone-200 px-4 py-3 font-dulce outline-none focus:border-[#BC0A7B]" />
@@ -445,12 +452,12 @@ function CartDrawer({ cartApi, open, onClose }) {
               <span className="text-stone-600">Total de productos</span>
               <span className="tx-ink text-2xl font-bold">{money(total)}</span>
             </div>
-            {missingAddress ? (
+            {missing.length > 0 ? (
               <>
                 <button disabled className="mt-4 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full border-[2.5px] border-stone-300 bg-stone-100 px-6 py-4 font-dulce text-lg font-bold text-stone-400">
                   <MessageCircle size={22} />Hacer pedido por WhatsApp
                 </button>
-                <p className="mt-2 text-center font-dulce text-xs text-stone-500">Escribe tu dirección o comparte tu ubicación para continuar.</p>
+                <p className="mt-2 text-center font-dulce text-xs text-stone-500">Completa {missing.join(" y ")} para continuar.</p>
               </>
             ) : (
               <a href={link} target="_blank" rel="noreferrer"
