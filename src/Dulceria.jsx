@@ -8,11 +8,12 @@ import { Menu, X, MapPin, Clock, MessageCircle, Phone, ShoppingCart, Minus, Plus
 const BRAND = {
   name: "Deli Dulces Típicos",
   logo: "/logo-deli.png",
-  whatsapp: "522410000000", // ← número con lada, sin + ni espacios
-  phone: "+52 241 000 0000",
-  address: "Calle Principal #00, Centro, Zacatelco, Tlaxcala",
+  whatsapp: "522462961183", // 52 + 10 dígitos, sin + ni espacios
+  phone: "+52 246 296 1183",
+  address: "Dulces Típicos “DELÍ” — encuéntranos en Google Maps",
   hours: "Lun a Sáb 9:00–19:00 · Dom 10:00–15:00",
-  mapsUrl: "https://maps.google.com/?q=Zacatelco,Tlaxcala",
+  mapsUrl: "https://maps.app.goo.gl/PWufEEF63BT8XXJx6",
+  mapEmbed: "https://maps.google.com/maps?q=19.0902905,-98.1873832&z=17&output=embed",
 };
 
 /* Paleta tomada del logo. Clases generadas: bg-mag, tx-mag, etc. */
@@ -206,7 +207,7 @@ function HeroPhoto() {
   const sizes = "(min-width: 768px) 560px, 92vw";
   const set = (ext) => [480, 800, 1199].map((w) => `/hero-familia-${w}.${ext} ${w}w`).join(", ");
   return (
-    <div className="flotar relative mx-auto w-full max-w-xl" style={{ perspective: 900 }}>
+    <div className="flotar relative mx-auto w-full min-w-0 max-w-xl" style={{ perspective: 900 }}>
       <div className="absolute -inset-3 rounded-[3rem] opacity-70 blur-2xl" style={{ background: `conic-gradient(${PAL.mag}, ${PAL.cya}, ${PAL.gre}, ${PAL.gol}, ${PAL.mag})` }} />
       <div ref={ref} onMouseMove={move} onMouseLeave={() => setTilt({ x: 0, y: 0 })}
         className="relative overflow-hidden rounded-[2.5rem] bg-cover"
@@ -233,8 +234,8 @@ function Hero() {
     <section id="inicio" className="relative overflow-hidden px-4 pb-10 pt-8 sm:pt-14">
       <div className="bg-magS absolute -left-16 top-10 h-52 w-52 rounded-full blur-3xl" />
       <div className="bg-cyaS absolute -right-10 bottom-0 h-60 w-60 rounded-full blur-3xl" />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-2">
-        <div className="entrada text-center md:text-left">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-8 md:grid-cols-2">
+        <div className="entrada min-w-0 text-center md:text-left">
           <p className="bg-golS tx-ink mb-3 inline-block rounded-full px-4 py-1 font-dulce text-sm font-medium">Hechas a mano, como siempre</p>
           <h1 className="tx-ink font-dulce text-4xl font-bold leading-tight sm:text-6xl">El crujido de la tradición, en cada bocado.</h1>
           <Ticker />
@@ -257,7 +258,7 @@ function Ticker() {
   const dots = ["tx-gol", "tx-cya", "tx-gre", "tx-ora", "tx-mag"];
   const mask = "linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)";
   return (
-    <div className="bg-ink mt-4 overflow-hidden rounded-full py-2 text-left">
+    <div className="bg-ink mt-4 w-full max-w-full overflow-hidden rounded-full py-2 text-left">
       <div style={{ maskImage: mask, WebkitMaskImage: mask }}>
         <div className="marquee flex w-max font-dulce text-sm font-medium text-white sm:text-base">
           {[...items, ...items].map((t, i) => (
@@ -379,7 +380,9 @@ function CartDrawer({ cartApi, open, onClose }) {
     setGeoMsg("Buscando tu ubicación…");
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => { setMapLink(`https://maps.google.com/?q=${coords.latitude.toFixed(6)},${coords.longitude.toFixed(6)}`); setGeoMsg("Ubicación agregada ✓"); },
-      () => setGeoMsg("No pudimos obtener tu ubicación. Escribe tu dirección."),
+      (err) => setGeoMsg(err.code === 1
+        ? "No tenemos permiso. Activa el GPS y permite el acceso a tu ubicación en el navegador, o escribe tu dirección."
+        : "No pudimos obtener tu ubicación. Revisa que el GPS esté activo o escribe tu dirección."),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
@@ -432,6 +435,7 @@ function CartDrawer({ cartApi, open, onClose }) {
                   placeholder="Calle, número, colonia, municipio, estado, C.P. y referencias"
                   className="mt-1 w-full rounded-2xl border-2 border-stone-200 px-4 py-3 font-dulce outline-none focus:border-[#BC0A7B]" />
                 <button type="button" onClick={locate} className="tx-mag mt-1 flex items-center gap-1 font-dulce text-sm font-semibold underline"><MapPin size={14} />Usar mi ubicación actual</button>
+                <p className="bg-golS tx-ink mt-2 rounded-2xl px-3 py-2 font-dulce text-xs">📍 Activa el GPS de tu teléfono y permite el acceso a tu ubicación para compartirla con nosotros.</p>
                 {geoMsg && <p role="status" className="mt-1 font-dulce text-xs text-stone-500">{geoMsg}</p>}
                 <p className="mt-1 font-dulce text-xs text-stone-500">El costo de envío se confirma por WhatsApp.</p>
               </div>
@@ -484,7 +488,7 @@ function Story() {
   ];
   return (
     <section id="historia" className="bg-golS px-4 py-16">
-      <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2">
+      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-2">
         <div>
           <h2 className="tx-ink font-dulce text-3xl font-bold sm:text-4xl">Dulce herencia, hecha a mano.</h2>
           <p className="mt-4 max-w-lg font-dulce text-lg text-stone-700">
@@ -521,7 +525,7 @@ function Contact() {
   return (
     <section id="contacto" className="mx-auto max-w-6xl px-4 pb-24">
       <h2 className="tx-ink font-dulce text-3xl font-bold sm:text-4xl">Ven a probarlos</h2>
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2">
         <div className="sh space-y-4 rounded-[2rem] bg-white p-6">
           <p className="flex gap-3 font-dulce text-stone-700"><MapPin className="tx-mag shrink-0" />{BRAND.address}</p>
           <p className="flex gap-3 font-dulce text-stone-700"><Clock className="tx-mag shrink-0" />{BRAND.hours}</p>
@@ -531,9 +535,9 @@ function Contact() {
             <a href={BRAND.mapsUrl} className="pop bg-cya tx-ink rounded-full px-6 py-3 text-center font-dulce font-semibold">Cómo llegar</a>
           </div>
         </div>
-        <div className="bg-cyaS tx-ink flex min-h-48 items-center justify-center rounded-[2rem] p-6 text-center font-dulce">
-          {/* Reemplaza este bloque por un <iframe> de Google Maps */}
-          Aquí va tu mapa
+        <div className="bg-cyaS min-h-64 overflow-hidden rounded-[2rem]">
+          <iframe title="Ubicación de la dulcería en Google Maps" src={BRAND.mapEmbed} loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade" className="h-full min-h-64 w-full border-0" />
         </div>
       </div>
     </section>
