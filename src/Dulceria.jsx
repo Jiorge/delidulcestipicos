@@ -23,6 +23,7 @@ const PAL = {
   ora: "#FB9140", // naranja de la "l"
   gre: "#7CD256", // verde de la "i"
   gol: "#F6C655", // dorado de la corona
+  uva: "#7A2A8A", azul: "#2C5DA8", // morado y azul del bordado (decoración)
   ink: "#2A1330", // ciruela oscuro: textos y contornos
   cre: "#FFF8EC", // fondo crema
   magS: "#FBE0F0", cyaS: "#DDF6FB", oraS: "#FFE6D2", greS: "#E6F7DA", golS: "#FFF1CB", creS: "#F1EADF",
@@ -149,11 +150,16 @@ function Styles() {
       @keyframes entrada { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
       @keyframes subir { from { transform: translateY(100%) } to { transform: none } }
       @keyframes marquee { to { transform: translateX(-50%) } }
+      @keyframes swing { 0%,100% { transform: rotate(-5deg) } 50% { transform: rotate(5deg) } }
+      @keyframes girar { to { transform: rotate(360deg) } }
+      .swing { transform-origin: top center; animation: swing 4s ease-in-out infinite; }
+      .girar { animation: girar 26s linear infinite; }
+      .fiesta-bg { background-color: ${PAL.cre}; background-image: radial-gradient(rgba(122,42,138,.09) 1.6px, transparent 1.7px), radial-gradient(rgba(212,53,127,.07) 1.6px, transparent 1.7px); background-size: 30px 30px; background-position: 0 0, 15px 15px; }
       .flotar { animation: flotar 5s ease-in-out infinite; }
       .entrada { animation: entrada .6s ease-out both; }
       .subir { animation: subir .3s ease-out both; }
       .marquee { animation: marquee 34s linear infinite; }
-      @media (prefers-reduced-motion: reduce) { .flotar, .entrada, .subir, .marquee { animation: none !important; } }
+      @media (prefers-reduced-motion: reduce) { .flotar, .entrada, .subir, .marquee, .swing, .girar { animation: none !important; } }
     `}</style>
   );
 }
@@ -229,17 +235,80 @@ function HeroPhoto() {
   );
 }
 
+/* ---------- Fondo de fiesta: papel picado, marco y flores ---------- */
+const FLAG_COLORS = [PAL.mag, PAL.uva, PAL.cya, PAL.gol, PAL.gre, PAL.ora, PAL.azul];
+
+const circ = (cx, cy, r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
+const rectP = (x, y, w, h) => `M${x} ${y}h${w}v${h}h${-w}z`;
+const diamond = (cx, cy, w, h) => `M${cx} ${cy - h}l${w} ${h}l${-w} ${h}l${-w} ${-h}z`;
+const FLAG = "M0 0H64V70L56 80L48 70L40 80L32 70L24 80L16 70L8 80L0 70Z";
+
+// Contorno del banderín + huecos calados (evenodd). v = variante 0..3
+function flagPath(v) {
+  let d = FLAG + [10, 21, 32, 43, 54].map((x) => circ(x, 9, 2.3)).join("");
+  if (v === 0) d += [0, 1, 2, 3, 4, 5, 6, 7].map((k) => circ(+(32 + 13 * Math.cos(k * Math.PI / 4)).toFixed(2), +(40 + 13 * Math.sin(k * Math.PI / 4)).toFixed(2), 3.4)).join("") + circ(32, 40, 4.5);
+  if (v === 1) d += diamond(32, 32, 9, 10) + diamond(32, 56, 9, 10);
+  if (v === 2) d += circ(32, 40, 15) + circ(32, 40, 9.5) + circ(32, 40, 4);
+  if (v === 3) for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) d += rectP(19 + c * 10, 26 + r * 13, 7, 8);
+  return d;
+}
+
+/* Cuerda de banderines de papel picado que se mecen. Va dentro de un contenedor "relative". */
+function Bunting() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-5" aria-hidden="true">
+      <div className="h-0.5 w-full" style={{ background: PAL.ink, opacity: 0.5 }} />
+      <div className="flex justify-around gap-1">
+        {Array.from({ length: 16 }, (_, i) => (
+          <svg key={i} viewBox="0 0 64 80" className={`swing min-w-0 flex-1 ${i >= 8 ? "hidden sm:block" : ""}`}
+            style={{ maxWidth: 64, animationDelay: `${-(i % 5) * 0.8}s`, animationDuration: `${3.6 + (i % 3) * 0.6}s` }}>
+            <path d={flagPath(i % 4)} fillRule="evenodd" fill={FLAG_COLORS[i % 7]} />
+          </svg>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Marco lateral fijo con mosaicos de papel picado, como el borde del bordado */
+const tileHoles = (y) => diamond(24, y + 18, 9, 11) + circ(24, y + 36, 3) + [[8, 8], [40, 8], [8, 40], [40, 40]].map(([x, o]) => circ(x, y + o, 2)).join("");
+const TILE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 192">${[PAL.azul, PAL.gol, PAL.uva, PAL.mag].map((c, i) => `<path fill-rule="evenodd" fill="${c}" d="${rectP(2, 2 + i * 48, 44, 44)}${tileHoles(i * 48)}"/>`).join("")}</svg>`;
+const TILE_STYLE = { backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(TILE_SVG)}")`, backgroundSize: "100% auto", backgroundRepeat: "repeat-y" };
+
+function EdgeFrame() {
+  return (
+    <>
+      <div aria-hidden="true" className="pointer-events-none fixed inset-y-0 left-0 z-20 w-4 xl:w-12" style={TILE_STYLE} />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-y-0 right-0 z-20 w-4 xl:w-12" style={TILE_STYLE} />
+    </>
+  );
+}
+
+function Flower({ a, b, className = "", style }) {
+  return (
+    <svg viewBox="0 0 40 40" aria-hidden="true" className={className} style={style}>
+      {[0, 72, 144, 216, 288].map((r) => <ellipse key={r} cx="20" cy="9" rx="6" ry="9" fill={a} transform={`rotate(${r} 20 20)`} />)}
+      <circle cx="20" cy="20" r="6" fill={b} />
+      <circle cx="20" cy="20" r="2.4" fill={PAL.ink} opacity=".25" />
+    </svg>
+  );
+}
+
 function Hero() {
   return (
-    <section id="inicio" className="relative overflow-hidden px-4 pb-10 pt-8 sm:pt-14">
+    <section id="inicio" className="relative overflow-hidden px-4 pb-10 pt-20 sm:pt-28">
+      <Bunting />
       <div className="bg-magS absolute -left-16 top-10 h-52 w-52 rounded-full blur-3xl" />
       <div className="bg-cyaS absolute -right-10 bottom-0 h-60 w-60 rounded-full blur-3xl" />
+      <Flower a={PAL.mag} b={PAL.gol} className="girar absolute left-10 top-32 hidden w-14 opacity-80 sm:block" />
+      <Flower a={PAL.uva} b={PAL.ora} className="girar absolute right-16 top-36 hidden w-12 opacity-80 sm:block" style={{ animationDirection: "reverse" }} />
+      <Flower a={PAL.azul} b={PAL.gol} className="girar absolute bottom-16 left-16 hidden w-12 opacity-70 sm:block" />
+      <Flower a={PAL.ora} b={PAL.mag} className="girar absolute bottom-24 right-10 hidden w-16 opacity-70 sm:block" style={{ animationDirection: "reverse" }} />
       <div className="relative mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-x-8 gap-y-6 md:grid-cols-2 md:gap-y-0">
         {/* Móvil: titular → cinta → foto → texto y botones. Escritorio: texto a la izquierda, foto a la derecha */}
         <div className="entrada min-w-0 text-center md:col-start-1 md:row-start-1 md:self-end md:text-left">
-          <p className="bg-golS tx-ink mb-3 inline-block rounded-full px-4 py-1 font-dulce text-sm font-medium">Hechas a mano, como siempre</p>
           <h1 className="tx-ink font-dulce text-4xl font-bold leading-tight sm:text-6xl">El crujido de la tradición, en cada bocado.</h1>
-          <Ticker />
+          <p className="bg-golS tx-ink mt-4 inline-block rounded-full px-4 py-1 font-dulce text-sm font-medium">Hechas artesanalmente, como siempre</p>
         </div>
         <div className="md:col-start-2 md:row-span-2 md:row-start-1">
           <HeroPhoto />
@@ -263,7 +332,7 @@ function Ticker() {
   const dots = ["tx-gol", "tx-cya", "tx-gre", "tx-ora", "tx-mag"];
   const mask = "linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)";
   return (
-    <div className="bg-ink mt-4 w-full max-w-full overflow-hidden rounded-full py-2 text-left">
+    <div className="bg-ink mt-3 w-full overflow-hidden py-2">
       <div style={{ maskImage: mask, WebkitMaskImage: mask }}>
         <div className="marquee flex w-max font-dulce text-sm font-medium text-white sm:text-base">
           {[...items, ...items].map((t, i) => (
@@ -494,7 +563,8 @@ function Story() {
     { t: "El corte", d: "Cada pieza se corta y se empaca con cariño.", c: "tx-mag" },
   ];
   return (
-    <section id="historia" className="bg-golS px-4 py-16">
+    <section id="historia" className="bg-golS relative overflow-hidden px-4 pb-16 pt-24">
+      <Bunting />
       <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-2">
         <div>
           <h2 className="tx-ink font-dulce text-3xl font-bold sm:text-4xl">Dulce herencia, hecha a mano.</h2>
@@ -557,9 +627,11 @@ export default function Dulceria() {
   const [cartOpen, setCartOpen] = useState(false);
   const count = cartApi.items.length;
   return (
-    <div className="bg-cre tx-ink min-h-screen antialiased" style={{ scrollBehavior: "smooth" }}>
+    <div className="fiesta-bg tx-ink min-h-screen antialiased" style={{ scrollBehavior: "smooth" }}>
       <Styles />
+      <EdgeFrame />
       <Header count={count} openCart={() => setCartOpen(true)} />
+      <Ticker />
       <main>
         <Hero />
         <Catalog data={data} cartApi={cartApi} />
