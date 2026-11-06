@@ -8,11 +8,11 @@ import { Menu, X, MapPin, Clock, MessageCircle, Phone, ShoppingCart, Minus, Plus
 const BRAND = {
   name: "Deli Dulces Típicos",
   logo: "/logo-deli.png",
-  whatsapp: "522410000000", // ← número con lada, sin + ni espacios
+  whatsapp: "522462961183", // ← número con lada, sin + ni espacios
   phone: "+52 241 000 0000",
   address: "Calle Principal #00, Centro, Zacatelco, Tlaxcala",
   hours: "Lun a Sáb 9:00–19:00 · Dom 10:00–15:00",
-  mapsUrl: "https://maps.google.com/?q=Zacatelco,Tlaxcala",
+  mapsUrl: "https://maps.app.goo.gl/bLhdyAxGYkYFNZJLA",
 };
 
 /* Paleta tomada del logo. Clases generadas: bg-mag, tx-mag, etc. */
@@ -247,7 +247,7 @@ function Hero() {
 }
 
 function Marquee() {
-  const items = ["Palanquetas", "Alegrías", "Cocadas", "Borrachitos", "Camotes", "Ate", "Obleas con cajeta", "Dulces por kilo"];
+  const items = ["Envío a Toda la Republica Mexicana", "Metodos de Pago Seguro", "Envíos Expres", "Descuento en Compras Mayores a $2500.00", "Atención Inmediata"];
   const dots = ["tx-gol", "tx-cya", "tx-gre", "tx-ora"];
   return (
     <div className="bg-ink overflow-hidden py-3" aria-hidden="true">
