@@ -8,11 +8,11 @@ import { Menu, X, MapPin, Clock, MessageCircle, Phone, ShoppingCart, Minus, Plus
 const BRAND = {
   name: "Deli Dulces Típicos",
   logo: "/logo-deli.png",
-  whatsapp: "522462961183", // ← número con lada, sin + ni espacios
+  whatsapp: "522410000000", // ← número con lada, sin + ni espacios
   phone: "+52 241 000 0000",
   address: "Calle Principal #00, Centro, Zacatelco, Tlaxcala",
   hours: "Lun a Sáb 9:00–19:00 · Dom 10:00–15:00",
-  mapsUrl: "https://maps.app.goo.gl/bLhdyAxGYkYFNZJLA",
+  mapsUrl: "https://maps.google.com/?q=Zacatelco,Tlaxcala",
 };
 
 /* Paleta tomada del logo. Clases generadas: bg-mag, tx-mag, etc. */
@@ -115,7 +115,7 @@ function useCart(products) {
   return { cart, change, clear, items, total };
 }
 
-function orderMessage(items, total, name, delivery) {
+function orderMessage(items, total, name, delivery, address, mapLink) {
   const lines = items.map(({ p, qty }) => `• ${fmtQty(p, qty)} ${p.name} — ${money(p.price * qty)}`);
   return [
     `Hola, quiero hacer un pedido en ${BRAND.name}:`,
@@ -125,6 +125,8 @@ function orderMessage(items, total, name, delivery) {
     `Total: ${money(total)}`,
     name ? `Nombre: ${name}` : null,
     `Entrega: ${delivery}`,
+    address ? `Dirección: ${address}` : null,
+    mapLink ? `Ubicación: ${mapLink}` : null,
     "",
     "Por favor confírmame disponibilidad, el total final y los datos para el pago.",
   ].filter((l) => l !== null).join("\n");
@@ -149,7 +151,7 @@ function Styles() {
       .flotar { animation: flotar 5s ease-in-out infinite; }
       .entrada { animation: entrada .6s ease-out both; }
       .subir { animation: subir .3s ease-out both; }
-      .marquee { animation: marquee 28s linear infinite; }
+      .marquee { animation: marquee 34s linear infinite; }
       @media (prefers-reduced-motion: reduce) { .flotar, .entrada, .subir, .marquee { animation: none !important; } }
     `}</style>
   );
@@ -189,36 +191,39 @@ function Header({ count, openCart }) {
   );
 }
 
-/* Palanqueta en SVG: gira siguiendo el cursor / dedo */
-function SpinningCandy() {
+/* Foto principal: AVIF/WebP responsivos + miniatura borrosa mientras carga.
+   Archivos en /public: hero-familia-480|800|1199 .avif y .webp */
+const LQIP = "data:image/webp;base64,UklGRgoBAABXRUJQVlA4IP4AAABQBgCdASoYABIAPu1sq1EppaOiqAqpMB2JQBOma0ft6wB5AR/j+VSchcFdsNpM+hjpj61j+zNnW278AAD9ioTCLkerxbF3HGKyTI66RqvCpnddJk46nWFtdyoeO6ulVp7fN+1ZSPzFV1XXYVxeHB4EfGDBoCUjGr1Imt1GDBgkXA5hi2hduasooAiyiFaiNCK5az5ah6qUCuG/sGOppzFv3tPpzq1n5/jIodHQG1l5rIHoFUVRKIBlNPBMgLhzmGSB3Z3DLEka9giz3esJcdXyyvmeAMsNS3KlujBYZOD3i8qqh+kn07ZqGXV1Rsnf9hHpNYZpx7G+7CYGKp4AAA==";
+function HeroPhoto() {
   const ref = useRef(null);
-  const [rot, setRot] = useState({ z: -8, x: 0, y: 0 });
-  const [hover, setHover] = useState(false);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const move = (e) => {
     const r = ref.current.getBoundingClientRect();
     const px = ((e.clientX - r.left) / r.width - 0.5) * 2;
     const py = ((e.clientY - r.top) / r.height - 0.5) * 2;
-    setRot({ z: px * 40, x: -py * 16, y: px * 16 });
+    setTilt({ x: -py * 5, y: px * 6 });
   };
-  const nuts = [[70,80],[120,60],[160,95],[95,125],[140,140],[60,150],[185,150],[110,185],[165,190],[75,200],[130,100]];
+  const sizes = "(min-width: 768px) 560px, 92vw";
+  const set = (ext) => [480, 800, 1199].map((w) => `/hero-familia-${w}.${ext} ${w}w`).join(", ");
   return (
-    <div ref={ref} onMouseMove={move} onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => { setHover(false); setRot({ z: -8, x: 0, y: 0 }); }}
-      className="flotar relative mx-auto aspect-square w-64 cursor-pointer sm:w-80" style={{ perspective: 800 }}
-      role="img" aria-label="Palanqueta de cacahuate girando">
-      <div className="absolute inset-0 rounded-full opacity-70 blur-2xl" style={{ background: `conic-gradient(${PAL.mag}, ${PAL.cya}, ${PAL.gre}, ${PAL.gol}, ${PAL.mag})` }} />
-      <svg viewBox="0 0 250 260" className="relative h-full w-full drop-shadow-2xl"
-        style={{ transform: `rotateZ(${rot.z}deg) rotateX(${rot.x}deg) rotateY(${rot.y}deg) scale(${hover ? 1.08 : 1})`, transition: "transform .35s cubic-bezier(.2,.8,.2,1)" }}>
-        <circle cx="125" cy="130" r="112" fill={PAL.ink} />
-        <circle cx="125" cy="130" r="106" fill="#E39A2D" />
-        <circle cx="125" cy="130" r="98" fill={PAL.gol} />
-        {nuts.map(([x, y], i) => (
-          <g key={i} transform={`rotate(${i * 37} ${x} ${y})`}>
-            <ellipse cx={x} cy={y} rx="17" ry="11" fill="#A9631F" />
-            <ellipse cx={x - 2} cy={y - 2} rx="13" ry="7" fill="#E0A55A" />
-          </g>
-        ))}
-      </svg>
+    <div className="flotar relative mx-auto w-full max-w-xl" style={{ perspective: 900 }}>
+      <div className="absolute -inset-3 rounded-[3rem] opacity-70 blur-2xl" style={{ background: `conic-gradient(${PAL.mag}, ${PAL.cya}, ${PAL.gre}, ${PAL.gol}, ${PAL.mag})` }} />
+      <div ref={ref} onMouseMove={move} onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+        className="relative overflow-hidden rounded-[2.5rem] bg-cover"
+        style={{
+          aspectRatio: "1199 / 880", backgroundImage: `url(${LQIP})`,
+          border: `3px solid ${PAL.ink}`, boxShadow: `0 7px 0 ${PAL.ink}`,
+          transform: `rotate(-2deg) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          transition: "transform .35s cubic-bezier(.2,.8,.2,1)",
+        }}>
+        <picture>
+          <source type="image/avif" srcSet={set("avif")} sizes={sizes} />
+          <source type="image/webp" srcSet={set("webp")} sizes={sizes} />
+          <img src="/hero-familia-800.webp" width="1199" height="880" fetchPriority="high" decoding="async"
+            alt="Una familia mexicana comparte palanquetas, cocadas y dulces típicos en la mesa de la cocina"
+            className="h-full w-full object-cover" />
+        </picture>
+      </div>
     </div>
   );
 }
@@ -232,6 +237,7 @@ function Hero() {
         <div className="entrada text-center md:text-left">
           <p className="bg-golS tx-ink mb-3 inline-block rounded-full px-4 py-1 font-dulce text-sm font-medium">Hechas a mano, como siempre</p>
           <h1 className="tx-ink font-dulce text-4xl font-bold leading-tight sm:text-6xl">El crujido de la tradición, en cada bocado.</h1>
+          <Ticker />
           <p className="mx-auto mt-4 max-w-md font-dulce text-lg text-stone-600 md:mx-0">
             Somos productores de palanquetas y alegrías de amaranto. Miel, semillas y recetas de familia. Además, una selección de los mejores dulces típicos de México.
           </p>
@@ -240,19 +246,24 @@ function Hero() {
             <a href={wa("Hola, quiero cotizar un pedido para evento o mayoreo")} className="pop bg-cya tx-ink rounded-full px-7 py-4 text-center font-dulce text-lg font-semibold">Cotizar para mi evento</a>
           </div>
         </div>
-        <SpinningCandy />
+        <HeroPhoto />
       </div>
     </section>
   );
 }
 
-function Marquee() {
-  const items = ["Envío a Toda la Republica Mexicana", "Metodos de Pago Seguro", "Envíos Expres", "Descuento en Compras Mayores a $2500.00", "Atención Inmediata"];
-  const dots = ["tx-gol", "tx-cya", "tx-gre", "tx-ora"];
+function Ticker() {
+  const items = ["Envío a Toda la República Mexicana", "Métodos de Pago Seguros", "Envíos Exprés", "Descuento en Compras Mayores a $2,500.00", "Atención Inmediata"];
+  const dots = ["tx-gol", "tx-cya", "tx-gre", "tx-ora", "tx-mag"];
+  const mask = "linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)";
   return (
-    <div className="bg-ink overflow-hidden py-3" aria-hidden="true">
-      <div className="marquee flex w-max gap-8 font-dulce text-lg font-medium text-white">
-        {[...items, ...items].map((t, i) => (<span key={i} className="whitespace-nowrap">{t} <b className={dots[i % 4]}>✦</b></span>))}
+    <div className="bg-ink mt-4 overflow-hidden rounded-full py-2 text-left">
+      <div style={{ maskImage: mask, WebkitMaskImage: mask }}>
+        <div className="marquee flex w-max font-dulce text-sm font-medium text-white sm:text-base">
+          {[...items, ...items].map((t, i) => (
+            <span key={i} aria-hidden={i >= items.length} className="whitespace-nowrap px-4">{t} <b className={dots[i % 5]}>✦</b></span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -353,11 +364,26 @@ function Catalog({ data, cartApi }) {
   );
 }
 
-function CartDrawer({ cartApi, onClose }) {
+function CartDrawer({ cartApi, open, onClose }) {
   const { items, total, change, clear } = cartApi;
   const [name, setName] = useState("");
   const [delivery, setDelivery] = useState("Recoger en tienda");
-  const link = wa(orderMessage(items, total, name.trim(), delivery));
+  const [address, setAddress] = useState("");
+  const [mapLink, setMapLink] = useState("");
+  const [geoMsg, setGeoMsg] = useState("");
+  const isShip = delivery === "Envío a domicilio";
+  const missingAddress = isShip && !address.trim() && !mapLink;
+  const link = wa(orderMessage(items, total, name.trim(), delivery, isShip ? address.trim() : "", isShip ? mapLink : ""));
+  const locate = () => {
+    if (!navigator.geolocation) return setGeoMsg("Tu navegador no permite compartir ubicación. Escribe tu dirección.");
+    setGeoMsg("Buscando tu ubicación…");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => { setMapLink(`https://maps.google.com/?q=${coords.latitude.toFixed(6)},${coords.longitude.toFixed(6)}`); setGeoMsg("Ubicación agregada ✓"); },
+      () => setGeoMsg("No pudimos obtener tu ubicación. Escribe tu dirección."),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+  if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:justify-end sm:p-4" onClick={onClose}>
       <div role="dialog" aria-label="Tu pedido" onClick={(e) => e.stopPropagation()}
@@ -391,7 +417,7 @@ function CartDrawer({ cartApi, onClose }) {
               ))}
             </ul>
 
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre"
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre (opcional)"
               className="mt-4 w-full rounded-2xl border-2 border-stone-200 px-4 py-3 font-dulce outline-none focus:border-[#BC0A7B]" />
             <div className="mt-3 flex gap-2" role="group" aria-label="Tipo de entrega">
               {["Recoger en tienda", "Envío a domicilio"].map((d) => (
@@ -399,16 +425,35 @@ function CartDrawer({ cartApi, onClose }) {
                   className={`flex-1 rounded-full px-3 py-2 font-dulce text-sm font-medium ${delivery === d ? "bg-cya tx-ink pop" : "bg-stone-100 text-stone-600"}`}>{d}</button>
               ))}
             </div>
-            {delivery === "Envío a domicilio" && <p className="mt-2 font-dulce text-xs text-stone-500">El costo de envío se confirma por WhatsApp.</p>}
+            {isShip && (
+              <div className="mt-3">
+                <label htmlFor="direccion" className="font-dulce text-sm font-medium text-stone-700">Dirección de entrega</label>
+                <textarea id="direccion" rows={3} value={address} onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Calle, número, colonia, municipio, estado, C.P. y referencias"
+                  className="mt-1 w-full rounded-2xl border-2 border-stone-200 px-4 py-3 font-dulce outline-none focus:border-[#BC0A7B]" />
+                <button type="button" onClick={locate} className="tx-mag mt-1 flex items-center gap-1 font-dulce text-sm font-semibold underline"><MapPin size={14} />Usar mi ubicación actual</button>
+                {geoMsg && <p role="status" className="mt-1 font-dulce text-xs text-stone-500">{geoMsg}</p>}
+                <p className="mt-1 font-dulce text-xs text-stone-500">El costo de envío se confirma por WhatsApp.</p>
+              </div>
+            )}
 
             <div className="mt-5 flex items-center justify-between font-dulce">
               <span className="text-stone-600">Total de productos</span>
               <span className="tx-ink text-2xl font-bold">{money(total)}</span>
             </div>
-            <a href={link} target="_blank" rel="noreferrer"
-              className="pop bg-gre tx-ink mt-4 flex items-center justify-center gap-2 rounded-full px-6 py-4 font-dulce text-lg font-bold">
-              <MessageCircle size={22} />Hacer pedido por WhatsApp
-            </a>
+            {missingAddress ? (
+              <>
+                <button disabled className="mt-4 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full border-[2.5px] border-stone-300 bg-stone-100 px-6 py-4 font-dulce text-lg font-bold text-stone-400">
+                  <MessageCircle size={22} />Hacer pedido por WhatsApp
+                </button>
+                <p className="mt-2 text-center font-dulce text-xs text-stone-500">Escribe tu dirección o comparte tu ubicación para continuar.</p>
+              </>
+            ) : (
+              <a href={link} target="_blank" rel="noreferrer"
+                className="pop bg-gre tx-ink mt-4 flex items-center justify-center gap-2 rounded-full px-6 py-4 font-dulce text-lg font-bold">
+                <MessageCircle size={22} />Hacer pedido por WhatsApp
+              </a>
+            )}
             <p className="mt-3 text-center font-dulce text-xs text-stone-500">Te confirmamos disponibilidad y te compartimos los datos de pago por el mismo chat.</p>
             <button onClick={clear} className="mx-auto mt-3 flex items-center gap-1 font-dulce text-sm text-stone-500 underline"><Trash2 size={14} />Vaciar carrito</button>
           </>
@@ -506,7 +551,6 @@ export default function Dulceria() {
       <Header count={count} openCart={() => setCartOpen(true)} />
       <main>
         <Hero />
-        <Marquee />
         <Catalog data={data} cartApi={cartApi} />
         <Story />
         <Events />
@@ -517,7 +561,7 @@ export default function Dulceria() {
         © {new Date().getFullYear()} {BRAND.name}. Hecho en México, con amor y miel.
       </footer>
       {!cartOpen && <CartBar count={count} total={cartApi.total} onOpen={() => setCartOpen(true)} />}
-      {cartOpen && <CartDrawer cartApi={cartApi} onClose={() => setCartOpen(false)} />}
+      <CartDrawer cartApi={cartApi} open={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }
